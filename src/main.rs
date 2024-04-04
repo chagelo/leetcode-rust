@@ -19,10 +19,13 @@ use futures::executor::ThreadPool;
 use futures::future::join_all;
 use futures::stream::StreamExt;
 use futures::task::SpawnExt;
+extern crate dotenv;
 use std::sync::{Arc, Mutex};
 
 /// main() helps to generate the submission template .rs
 fn main() {
+    dotenv::dotenv().ok();
+
     println!("Welcome to leetcode-rust system.\n");
     let mut initialized_ids = get_initialized_ids();
     loop {
@@ -152,7 +155,7 @@ fn generate_random_id(except_ids: &[u32]) -> u32 {
     use std::fs;
     let mut rng = rand::thread_rng();
     loop {
-        let res: u32 = rng.gen_range(1, 1106);
+        let res: u32 = rng.gen_range(1..1106);
         if !except_ids.contains(&res) {
             return res;
         }
@@ -246,6 +249,7 @@ fn build_desc(content: &str) -> String {
     content
         .replace("<strong>", "")
         .replace("</strong>", "")
+        .replace("<strong class=\"example\">", "")
         .replace("<em>", "")
         .replace("</em>", "")
         .replace("</p>", "")
@@ -336,7 +340,7 @@ fn deal_problem(problem: &Problem, code: &CodeDefinition, write_mod_file: bool) 
             "__PROBLEM_DEFAULT_CODE__",
             &insert_return_in_code(&problem.return_type, &code.default_code),
         )
-        .replace("__PROBLEM_ID__", &format!("{}", problem.question_id))
+        .replace("__PROBLEM_ID__", &format!("{:0>4}", problem.question_id))
         .replace("__EXTRA_USE__", &parse_extra_use(&code.default_code))
         .replace("__PROBLEM_LINK__", &parse_problem_link(problem))
         .replace("__DISCUSS_LINK__", &parse_discuss_link(problem));

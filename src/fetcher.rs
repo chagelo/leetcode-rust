@@ -26,7 +26,7 @@ pub fn get_problem(frontend_question_id: u32) -> Option<Problem> {
                 return None;
             }
 
-            let client = reqwest::Client::new();
+            let client = reqwest::blocking::Client::new();
             let resp: RawProblem = client
                 .post(GRAPHQL_URL)
                 .json(&Query::question_query(
@@ -97,7 +97,79 @@ pub async fn get_problem_async(problem_stat: StatWithStatus) -> Option<Problem> 
 }
 
 pub fn get_problems() -> Option<Problems> {
-    reqwest::get(PROBLEMS_URL).unwrap().json().unwrap()
+    let headers = {
+        let mut h = reqwest::header::HeaderMap::new();
+        h.insert(
+            "Accept",
+            reqwest::header::HeaderValue::from_static(
+                "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            ),
+        );
+        h.insert(
+            "Accept-Encoding",
+            reqwest::header::HeaderValue::from_static("gzip, deflate, br"),
+        );
+        h.insert(
+            "Accept-Language",
+            reqwest::header::HeaderValue::from_static("zh-CN,en-US;q=0.7,en;q=0.3"),
+        );
+        h.insert(
+            "Connection",
+            reqwest::header::HeaderValue::from_static("keep-alive"),
+        );
+        h.insert(
+            "User-Agent",
+            reqwest::header::HeaderValue::from_static(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0",
+            ),
+        );
+        h.insert(
+            "Sec-Fetch-Dest",
+            reqwest::header::HeaderValue::from_static("document"),
+        );
+        h.insert(
+            "Sec-Fetch-Mode",
+            reqwest::header::HeaderValue::from_static("navigate"),
+        );
+        h.insert(
+            "Sec-Fetch-Site",
+            reqwest::header::HeaderValue::from_static("none"),
+        );
+        h.insert(
+            "Sec-Fetch-User",
+            reqwest::header::HeaderValue::from_static("?1"),
+        );
+        h.insert(
+            "Upgrade-Insecure-Requests",
+            reqwest::header::HeaderValue::from_static("1"),
+        );
+
+        h.insert(
+            "Host",
+            reqwest::header::HeaderValue::from_static("leetcode.com"),
+        );
+        h.insert(
+            "Cookie",
+            reqwest::header::HeaderValue::from_str(
+                &std::env::var("LEETCODE_COOKIE")
+                    .expect("Please set LEETCODE_COOKIE in .env file or environment"),
+            )
+            .unwrap(),
+        );
+        h
+    };
+    let client = reqwest::blocking::Client::builder()
+        .connection_verbose(true)
+        .http2_prior_knowledge()
+        .gzip(true)
+        .build()
+        .unwrap();
+    let get = client.get(PROBLEMS_URL).headers(headers);
+    // println!("Get: {:?}", get);
+    let reponse = get.send().unwrap();
+    // println!("Response: {:?}", reponse);
+    let result = reponse.json();
+    result.unwrap()
 }
 
 #[derive(Serialize, Deserialize)]
