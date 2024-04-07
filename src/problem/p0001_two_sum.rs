@@ -44,12 +44,16 @@ use std::collections::HashMap;
 impl Solution {
     pub fn two_sum(nums: Vec<i32>, target: i32) -> Vec<i32> {
         let ans: Vec<i32> = vec![];
-        let mut exis:HashMap<i32, bool> = HashMap::with_capacity(nums.len());
+        let mut exist = HashMap::with_capacity(nums.len());
         
         for (index, num) in nums.iter().enumerate() {
-            
+            match exist.get(&(target - num)) {
+                None => {
+                    exist.insert(num, index);
+                }
+                Some(idx) => return vec![*idx as i32, index as i32],
+            }
         }
-
         ans
     }
 }
